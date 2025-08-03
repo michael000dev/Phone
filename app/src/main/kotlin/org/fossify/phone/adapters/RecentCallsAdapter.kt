@@ -112,7 +112,7 @@ class RecentCallsAdapter(
 
     override fun getSelectableItemCount() = currentList.filterIsInstance<RecentCall>().size
 
-    override fun getIsItemSelectable(position: Int) = currentList[position] is RecentCall
+    override fun getIsItemSelectable(position: Int) = currentList.getOrNull(position) is RecentCall
 
     override fun getItemSelectionKey(position: Int) = currentList.getOrNull(position)?.getItemId()
 
@@ -200,7 +200,7 @@ class RecentCallsAdapter(
 
     private fun removeDefaultSIM() {
         val phoneNumber = getSelectedPhoneNumber() ?: return
-        activity.config.removeCustomSIM("tel:$phoneNumber")
+        activity.config.removeCustomSIM(phoneNumber)
         finishActMode()
     }
 
