@@ -314,8 +314,11 @@ class RecentCallsAdapter(
     fun updateItems(newItems: List<CallLogItem>, highlightText: String = "") {
         if (textToHighlight != highlightText) {
             textToHighlight = highlightText
-            submitList(newItems)
-            notifyDataSetChanged()
+            submitList(newItems) {
+                recyclerView.post {
+                    notifyDataSetChanged()
+                }
+            }
             finishActMode()
         } else {
             submitList(newItems)
@@ -453,17 +456,20 @@ class RecentCallsAdapter(
                 }
                 val shouldShowDuration = call.type != Calls.MISSED_TYPE && call.type != Calls.REJECTED_TYPE && call.duration > 0
 
-                if (call.specificType.isNotEmpty()) {
-                    nameToShow = SpannableString("$name - ${call.specificType}")
-
+                if (refreshItemsListener == null) {
                     // show specific number at "Show call details" dialog too
-                    if (refreshItemsListener == null) {
-                        nameToShow = if (formatPhoneNumbers) {
-                            SpannableString("$name - ${call.specificType}, ${call.specificNumber.formatPhoneNumber()}")
-                        } else {
-                            SpannableString("$name - ${call.specificType}, ${call.specificNumber}")
-                        }
-                    }
+                    val typePart = call.specificType
+                        .takeIf { it.isNotBlank() }?.let { " - $it" }.orEmpty()
+
+                    val numPart = call.specificNumber
+                        .takeIf { it.isNotBlank() }
+                        ?.let { if (formatPhoneNumbers) it.formatPhoneNumber() else it }
+                        ?.let { ", $it" }
+                        .orEmpty()
+
+                    nameToShow = SpannableString("$name$typePart$numPart")
+                } else if (call.specificType.isNotBlank()) {
+                    nameToShow = SpannableString("$name - ${call.specificType}")
                 }
 
                 if (call.groupedCalls != null) {
@@ -599,9 +605,13 @@ class RecentCallsAdapter(
 
                 val now = DateTime.now()
                 text = when (date.dayCode) {
-                    now.millis.toDayCode() -> activity.getString(R.string.today)
-                    now.minusDays(1).millis.toDayCode() -> activity.getString(R.string.yesterday)
-                    else -> date.timestamp.formatDateOrTime(activity, hideTimeOnOtherDays = true, showCurrentYear = false)
+                    now.millis.getDayCode() -> activity.getString(R.string.today)
+                    now.minusDays(1).millis.getDayCode() -> activity.getString(R.string.yesterday)
+                    else -> date.timestamp.formatDateOrTime(
+                        context = activity,
+                        hideTimeOnOtherDays = true,
+                        showCurrentYear = false
+                    )
                 }
             }
         }

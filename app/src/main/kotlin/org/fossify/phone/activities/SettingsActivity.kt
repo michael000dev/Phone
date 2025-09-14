@@ -1,27 +1,46 @@
 package org.fossify.phone.activities
 
-import android.annotation.TargetApi
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import androidx.activity.result.contract.ActivityResultContracts
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.fossify.commons.activities.ManageBlockedNumbersActivity
 import org.fossify.commons.dialogs.ChangeDateTimeFormatDialog
 import org.fossify.commons.dialogs.FeatureLockedDialog
 import org.fossify.commons.dialogs.RadioGroupDialog
-import org.fossify.commons.extensions.*
-import org.fossify.commons.helpers.*
+import org.fossify.commons.extensions.addLockedLabelIfNeeded
+import org.fossify.commons.extensions.baseConfig
+import org.fossify.commons.extensions.beVisibleIf
+import org.fossify.commons.extensions.getFontSizeText
+import org.fossify.commons.extensions.getProperPrimaryColor
+import org.fossify.commons.extensions.isOrWasThankYouInstalled
+import org.fossify.commons.extensions.showErrorToast
+import org.fossify.commons.extensions.toast
+import org.fossify.commons.extensions.updateTextColors
+import org.fossify.commons.extensions.viewBinding
+import org.fossify.commons.helpers.FONT_SIZE_EXTRA_LARGE
+import org.fossify.commons.helpers.FONT_SIZE_LARGE
+import org.fossify.commons.helpers.FONT_SIZE_MEDIUM
+import org.fossify.commons.helpers.FONT_SIZE_SMALL
+import org.fossify.commons.helpers.NavigationIcon
+import org.fossify.commons.helpers.TAB_CALL_HISTORY
+import org.fossify.commons.helpers.TAB_CONTACTS
+import org.fossify.commons.helpers.TAB_FAVORITES
+import org.fossify.commons.helpers.TAB_LAST_USED
+import org.fossify.commons.helpers.isNougatPlus
+import org.fossify.commons.helpers.isQPlus
+import org.fossify.commons.helpers.isTiramisuPlus
 import org.fossify.commons.models.RadioItem
 import org.fossify.phone.R
 import org.fossify.phone.databinding.ActivitySettingsBinding
 import org.fossify.phone.dialogs.ExportCallHistoryDialog
 import org.fossify.phone.dialogs.ManageVisibleTabsDialog
+import org.fossify.phone.extensions.canLaunchAccountsConfiguration
 import org.fossify.phone.extensions.config
+import org.fossify.phone.extensions.launchAccountsConfiguration
 import org.fossify.phone.helpers.RecentsHelper
 import org.fossify.phone.models.RecentCall
 import java.util.Locale
@@ -61,6 +80,8 @@ class SettingsActivity : SimpleActivity() {
         isMaterialActivity = true
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        setupOptionsMenu()
+        refreshMenuItems()
 
         binding.apply {
             updateMaterialActivityViews(settingsCoordinator, settingsHolder, useTransparentNavigation = true, useTopSearchMenu = false)
@@ -72,7 +93,6 @@ class SettingsActivity : SimpleActivity() {
         super.onResume()
         setupToolbar(binding.settingsToolbar, NavigationIcon.Arrow)
 
-        setupPurchaseThankYou()
         setupCustomizeColors()
         setupUseEnglish()
         setupLanguage()
@@ -115,17 +135,25 @@ class SettingsActivity : SimpleActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
-    private fun setupPurchaseThankYou() {
-        binding.settingsPurchaseThankYouHolder.beGoneIf(isOrWasThankYouInstalled())
-        binding.settingsPurchaseThankYouHolder.setOnClickListener {
-            launchPurchaseThankYouIntent()
+    private fun setupOptionsMenu() {
+        binding.settingsToolbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.calling_accounts -> launchAccountsConfiguration()
+                else -> return@setOnMenuItemClickListener false
+            }
+            return@setOnMenuItemClickListener true
+        }
+    }
+
+    private fun refreshMenuItems() {
+        binding.settingsToolbar.menu.apply {
+            findItem(R.id.calling_accounts).isVisible = canLaunchAccountsConfiguration()
         }
     }
 
     private fun setupCustomizeColors() {
-        binding.settingsColorCustomizationLabel.text = getCustomizeColorsString()
         binding.settingsColorCustomizationHolder.setOnClickListener {
-            handleCustomizeColorsClick()
+            startCustomizationActivity()
         }
     }
 
@@ -151,8 +179,6 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
-    // support for device-wise blocking came on Android 7, rely only on that
-    @TargetApi(Build.VERSION_CODES.N)
     private fun setupManageBlockedNumbers() {
         binding.apply {
             settingsManageBlockedNumbersLabel.text = addLockedLabelIfNeeded(R.string.manage_blocked_numbers)

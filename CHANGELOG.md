@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2025-09-01
+### Added
+- Option to launch system Calling accounts screen ([#67])
+
+### Changed
+- Tapping a contact now starts a call; tap the photo for details ([#80])
+- Improved speed dial management UX for contacts with multiple numbers
+- Updated translations
+
+### Fixed
+- Fixed speed dial not showing contact name ([#543])
+
+## [1.6.2] - 2025-08-23
+### Changed
+- Renamed notification channels to be more user-friendly ([#196])
+- Updated translations
+
+### Fixed
+- Fixed missing phone number in call history details ([#526])
+- Fixed incorrect sorting in call history search results ([#535])
+- Fixed frequent crashes in call history ([#378])
+
 ## [1.6.1] - 2025-07-31
 ### Changed
 - Updated translations
@@ -137,6 +159,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#39]: https://github.com/FossifyOrg/Phone/issues/39
 [#50]: https://github.com/FossifyOrg/Phone/issues/50
 [#60]: https://github.com/FossifyOrg/Phone/issues/60
+[#67]: https://github.com/FossifyOrg/Phone/issues/67
+[#80]: https://github.com/FossifyOrg/Phone/issues/80
 [#81]: https://github.com/FossifyOrg/Phone/issues/81
 [#88]: https://github.com/FossifyOrg/Phone/issues/88
 [#94]: https://github.com/FossifyOrg/Phone/issues/94
@@ -153,14 +177,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#181]: https://github.com/FossifyOrg/Phone/issues/181
 [#183]: https://github.com/FossifyOrg/Phone/issues/183
 [#186]: https://github.com/FossifyOrg/Phone/issues/186
+[#196]: https://github.com/FossifyOrg/Phone/issues/196
 [#237]: https://github.com/FossifyOrg/Phone/issues/237
 [#293]: https://github.com/FossifyOrg/Phone/issues/293
 [#307]: https://github.com/FossifyOrg/Phone/issues/307
 [#357]: https://github.com/FossifyOrg/Phone/issues/357
 [#359]: https://github.com/FossifyOrg/Phone/issues/359
 [#378]: https://github.com/FossifyOrg/Phone/issues/378
+[#526]: https://github.com/FossifyOrg/Phone/issues/526
+[#535]: https://github.com/FossifyOrg/Phone/issues/535
+[#543]: https://github.com/FossifyOrg/Phone/issues/543
 
-[Unreleased]: https://github.com/FossifyOrg/Phone/compare/1.6.1...HEAD
+[Unreleased]: https://github.com/FossifyOrg/Phone/compare/1.7.0...HEAD
+[1.7.0]: https://github.com/FossifyOrg/Phone/compare/1.6.2...1.7.0
+[1.6.2]: https://github.com/FossifyOrg/Phone/compare/1.6.1...1.6.2
 [1.6.1]: https://github.com/FossifyOrg/Phone/compare/1.6.0...1.6.1
 [1.6.0]: https://github.com/FossifyOrg/Phone/compare/1.5.1...1.6.0
 [1.5.1]: https://github.com/FossifyOrg/Phone/compare/1.5.0...1.5.1
