@@ -28,8 +28,8 @@ import org.fossify.phone.adapters.ContactsAdapter
 import org.fossify.phone.databinding.FragmentFavoritesBinding
 import org.fossify.phone.databinding.FragmentLettersLayoutBinding
 import org.fossify.phone.extensions.config
+import org.fossify.phone.extensions.handleGenericContactClick
 import org.fossify.phone.extensions.setupWithContacts
-import org.fossify.phone.extensions.startCallWithConfirmationCheck
 import org.fossify.phone.extensions.startContactDetailsIntent
 import org.fossify.phone.interfaces.RefreshItemsListener
 
@@ -127,7 +127,7 @@ class FavoritesFragment(context: Context, attributeSet: AttributeSet) : MyViewPa
                 showDeleteButton = false,
                 enableDrag = true,
                 itemClick = {
-                    activity?.startCallWithConfirmationCheck(it as Contact)
+                    activity?.handleGenericContactClick(it as Contact)
                 },
                 profileIconClick = {
                     activity?.startContactDetailsIntent(it as Contact)
@@ -183,6 +183,7 @@ class FavoritesFragment(context: Context, attributeSet: AttributeSet) : MyViewPa
             val orderIds = items.map { it.contactId }
             val orderGsonString = Gson().toJson(orderIds)
             config.favoritesContactsOrder = orderGsonString
+            allContacts = ArrayList(items)
         }
     }
 
@@ -199,7 +200,7 @@ class FavoritesFragment(context: Context, attributeSet: AttributeSet) : MyViewPa
     override fun onSearchQueryChanged(text: String) {
         val fixedText = text.trim().replace("\\s+".toRegex(), " ")
         val contacts = allContacts.filter {
-            it.name.contains(fixedText, true) || (text.toIntOrNull() != null && it.doesContainPhoneNumber(fixedText))
+            it.name.contains(fixedText, true) || (text.toLongOrNull() != null && it.doesContainPhoneNumber(fixedText))
         }.sortedByDescending {
             it.name.startsWith(fixedText, true)
         }.toMutableList() as ArrayList<Contact>

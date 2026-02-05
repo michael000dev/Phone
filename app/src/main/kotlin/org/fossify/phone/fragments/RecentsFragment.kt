@@ -2,16 +2,28 @@ package org.fossify.phone.fragments
 
 import android.content.Context
 import android.util.AttributeSet
-import org.fossify.commons.extensions.*
-import org.fossify.commons.helpers.*
+import org.fossify.commons.extensions.baseConfig
+import org.fossify.commons.extensions.beGone
+import org.fossify.commons.extensions.beGoneIf
+import org.fossify.commons.extensions.beVisible
+import org.fossify.commons.extensions.getMyContactsCursor
+import org.fossify.commons.extensions.hasPermission
+import org.fossify.commons.extensions.isVisible
+import org.fossify.commons.extensions.underlineText
+import org.fossify.commons.helpers.ContactsHelper
+import org.fossify.commons.helpers.MyContactsContentProvider
+import org.fossify.commons.helpers.PERMISSION_READ_CALL_LOG
+import org.fossify.commons.helpers.SMT_PRIVATE
+import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.commons.models.contacts.Contact
-import org.fossify.commons.views.MyRecyclerView
 import org.fossify.phone.R
 import org.fossify.phone.activities.MainActivity
 import org.fossify.phone.activities.SimpleActivity
 import org.fossify.phone.adapters.RecentCallsAdapter
 import org.fossify.phone.databinding.FragmentRecentsBinding
 import org.fossify.phone.extensions.config
+import org.fossify.phone.extensions.runAfterAnimations
+import org.fossify.phone.extensions.startAddContactIntent
 import org.fossify.phone.extensions.startCallWithConfirmationCheck
 import org.fossify.phone.extensions.startContactDetailsIntent
 import org.fossify.phone.helpers.RecentsHelper
@@ -68,7 +80,9 @@ class RecentsFragment(
         }
 
         refreshCallLog(loadAll = false) {
-            refreshCallLog(loadAll = true)
+            binding.recentsList.runAfterAnimations {
+                refreshCallLog(loadAll = true)
+            }
         }
     }
 
@@ -154,24 +168,18 @@ class RecentsFragment(
                         activity?.startCallWithConfirmationCheck(recentCall.phoneNumber, recentCall.name)
                     },
                     profileIconClick = {
-                        val contact = findContactByCall(it as RecentCall)
+                        val recentCall = it as RecentCall
+                        val contact = findContactByCall(recentCall)
                         if (contact != null) {
                             activity?.startContactDetailsIntent(contact)
+                        } else {
+                            activity?.startAddContactIntent(recentCall.phoneNumber)
                         }
                     }
                 )
 
                 binding.recentsList.adapter = recentsAdapter
                 recentsAdapter?.updateItems(recents)
-
-                if (context.areSystemAnimationsEnabled) {
-                    binding.recentsList.scheduleLayoutAnimation()
-                }
-
-                binding.recentsList.endlessScrollListener = object : MyRecyclerView.EndlessScrollListener {
-                    override fun updateTop() = Unit
-                    override fun updateBottom() = refreshCallLog()
-                }
             } else {
                 recentsAdapter?.updateItems(recents)
             }

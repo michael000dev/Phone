@@ -12,7 +12,6 @@ import org.fossify.commons.extensions.getColorStateList
 import org.fossify.commons.extensions.getContrastColor
 import org.fossify.commons.extensions.getMyContactsCursor
 import org.fossify.commons.extensions.hasPermission
-import org.fossify.commons.extensions.normalizePhoneNumber
 import org.fossify.commons.extensions.normalizeString
 import org.fossify.commons.extensions.underlineText
 import org.fossify.commons.helpers.ContactsHelper
@@ -27,9 +26,9 @@ import org.fossify.phone.activities.SimpleActivity
 import org.fossify.phone.adapters.ContactsAdapter
 import org.fossify.phone.databinding.FragmentContactsBinding
 import org.fossify.phone.databinding.FragmentLettersLayoutBinding
+import org.fossify.phone.extensions.handleGenericContactClick
 import org.fossify.phone.extensions.launchCreateNewContactIntent
 import org.fossify.phone.extensions.setupWithContacts
-import org.fossify.phone.extensions.startCallWithConfirmationCheck
 import org.fossify.phone.extensions.startContactDetailsIntent
 import org.fossify.phone.interfaces.RefreshItemsListener
 
@@ -129,7 +128,7 @@ class ContactsFragment(context: Context, attributeSet: AttributeSet) : MyViewPag
                     recyclerView = binding.fragmentList,
                     refreshItemsListener = this,
                     itemClick = {
-                        activity?.startCallWithConfirmationCheck(it as Contact)
+                        activity?.handleGenericContactClick(it as Contact)
                     },
                     profileIconClick = {
                         activity?.startContactDetailsIntent(it as Contact)
@@ -163,9 +162,7 @@ class ContactsFragment(context: Context, attributeSet: AttributeSet) : MyViewPag
         val filtered = allContacts.filter { contact ->
             getProperText(contact.getNameToDisplay(), shouldNormalize).contains(fixedText, true) ||
                 getProperText(contact.nickname, shouldNormalize).contains(fixedText, true) ||
-                (fixedText.toIntOrNull() != null && contact.phoneNumbers.any {
-                    fixedText.normalizePhoneNumber().isNotEmpty() && it.normalizedNumber.contains(fixedText.normalizePhoneNumber(), true)
-                }) ||
+                (fixedText.toLongOrNull() != null && contact.doesContainPhoneNumber(fixedText, true)) ||
                 contact.emails.any { it.value.contains(fixedText, true) } ||
                 contact.addresses.any { getProperText(it.value, shouldNormalize).contains(fixedText, true) } ||
                 contact.IMs.any { it.value.contains(fixedText, true) } ||

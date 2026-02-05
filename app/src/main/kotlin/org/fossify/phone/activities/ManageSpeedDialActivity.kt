@@ -27,13 +27,12 @@ class ManageSpeedDialActivity : SimpleActivity(), RemoveSpeedDialListener {
     private var speedDialValues = mutableListOf<SpeedDial>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        isMaterialActivity = true
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
         binding.apply {
-            updateMaterialActivityViews(manageSpeedDialCoordinator, manageSpeedDialHolder, useTransparentNavigation = true, useTopSearchMenu = false)
-            setupMaterialScrollListener(manageSpeedDialScrollview, manageSpeedDialToolbar)
+            setupEdgeToEdge(padBottomSystem = listOf(manageSpeedDialScrollview))
+            setupMaterialScrollListener(binding.manageSpeedDialScrollview, binding.manageSpeedDialAppbar)
 
         }
 
@@ -54,7 +53,7 @@ class ManageSpeedDialActivity : SimpleActivity(), RemoveSpeedDialListener {
 
     override fun onResume() {
         super.onResume()
-        setupToolbar(binding.manageSpeedDialToolbar, NavigationIcon.Arrow)
+        setupTopAppBar(binding.manageSpeedDialAppbar, NavigationIcon.Arrow)
     }
 
     override fun onStop() {
@@ -80,7 +79,7 @@ class ManageSpeedDialActivity : SimpleActivity(), RemoveSpeedDialListener {
                         val selectedNumber = selectedValue as PhoneNumber
                         speedDialValues.first { it.id == clickedContact.id }.apply {
                             displayName = selectedContact.getNameToDisplay()
-                            number = selectedNumber.normalizedNumber
+                            number = selectedNumber.value
                             type = selectedNumber.type
                             label = selectedNumber.label
                         }
@@ -89,7 +88,7 @@ class ManageSpeedDialActivity : SimpleActivity(), RemoveSpeedDialListener {
                 } else {
                     speedDialValues.first { it.id == clickedContact.id }.apply {
                         displayName = selectedContact.getNameToDisplay()
-                        number = selectedContact.phoneNumbers.first().normalizedNumber
+                        number = selectedContact.phoneNumbers.first().value
                     }
                     updateAdapter()
                 }

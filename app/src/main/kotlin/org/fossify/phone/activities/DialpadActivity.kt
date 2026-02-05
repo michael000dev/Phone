@@ -27,11 +27,9 @@ import org.fossify.commons.extensions.getColorStateList
 import org.fossify.commons.extensions.getColoredDrawableWithColor
 import org.fossify.commons.extensions.getContrastColor
 import org.fossify.commons.extensions.getMyContactsCursor
-import org.fossify.commons.extensions.getProperBackgroundColor
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.isDefaultDialer
-import org.fossify.commons.extensions.launchActivityIntent
 import org.fossify.commons.extensions.normalizeString
 import org.fossify.commons.extensions.onTextChangeListener
 import org.fossify.commons.extensions.performHapticFeedback
@@ -39,7 +37,6 @@ import org.fossify.commons.extensions.updateTextColors
 import org.fossify.commons.extensions.value
 import org.fossify.commons.extensions.viewBinding
 import org.fossify.commons.helpers.ContactsHelper
-import org.fossify.commons.helpers.KEY_PHONE
 import org.fossify.commons.helpers.KeypadHelper
 import org.fossify.commons.helpers.LOWER_ALPHA_INT
 import org.fossify.commons.helpers.MyContactsContentProvider
@@ -57,6 +54,7 @@ import org.fossify.phone.extensions.config
 import org.fossify.phone.extensions.disableKeyboard
 import org.fossify.phone.extensions.getKeyEvent
 import org.fossify.phone.extensions.setupWithContacts
+import org.fossify.phone.extensions.startAddContactIntent
 import org.fossify.phone.extensions.startCallWithConfirmationCheck
 import org.fossify.phone.extensions.startContactDetailsIntent
 import org.fossify.phone.helpers.DIALPAD_TONE_LENGTH_MS
@@ -98,16 +96,11 @@ class DialpadActivity : SimpleActivity() {
         hasRussianLocale = Locale.getDefault().language == "ru"
 
         binding.apply {
-            updateMaterialActivityViews(
-                mainCoordinatorLayout = dialpadCoordinator,
-                nestedView = dialpadHolder,
-                useTransparentNavigation = true,
-                useTopSearchMenu = false
+            setupEdgeToEdge(
+                padBottomImeAndSystem = listOf(dialpadList, dialpadHolder)
             )
-            setupMaterialScrollListener(dialpadList, dialpadToolbar)
+            setupMaterialScrollListener(binding.dialpadList, binding.dialpadAppbar)
         }
-
-        updateNavigationBarColor(getProperBackgroundColor())
 
         if (checkAppSideloading()) {
             return
@@ -231,8 +224,7 @@ class DialpadActivity : SimpleActivity() {
         super.onResume()
         updateTextColors(binding.dialpadHolder)
         binding.dialpadClearChar.applyColorFilter(getProperTextColor())
-        updateNavigationBarColor(getProperBackgroundColor())
-        setupToolbar(binding.dialpadToolbar, NavigationIcon.Arrow)
+        setupTopAppBar(binding.dialpadAppbar, NavigationIcon.Arrow)
     }
 
     private fun setupOptionsMenu() {
@@ -260,12 +252,7 @@ class DialpadActivity : SimpleActivity() {
     }
 
     private fun addNumberToContact() {
-        Intent().apply {
-            action = Intent.ACTION_INSERT_OR_EDIT
-            type = "vnd.android.cursor.item/contact"
-            putExtra(KEY_PHONE, binding.dialpadInput.value)
-            launchActivityIntent(this)
-        }
+        startAddContactIntent(binding.dialpadInput.value)
     }
 
     private fun dialpadPressed(char: Char, view: View?) {
@@ -352,11 +339,7 @@ class DialpadActivity : SimpleActivity() {
             recyclerView = binding.dialpadList,
             highlightText = text,
             itemClick = {
-                val contact = it as Contact
-                startCallWithConfirmationCheck(
-                    recipient = contact.getPrimaryNumber() ?: return@ContactsAdapter,
-                    name = contact.getNameToDisplay()
-                )
+                startCallWithConfirmationCheck(it as Contact)
                 clearInputWithDelay()
             },
             profileIconClick = {

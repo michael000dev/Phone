@@ -34,6 +34,7 @@ import org.fossify.phone.dialogs.ChangeSortingDialog
 import org.fossify.phone.dialogs.FilterContactSourcesDialog
 import org.fossify.phone.extensions.clearMissedCalls
 import org.fossify.phone.extensions.config
+import org.fossify.phone.extensions.handleFullScreenNotificationsPermission
 import org.fossify.phone.extensions.launchCreateNewContactIntent
 import org.fossify.phone.fragments.ContactsFragment
 import org.fossify.phone.fragments.FavoritesFragment
@@ -48,6 +49,8 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
 class MainActivity : SimpleActivity() {
+    override var isSearchBarEnabled = true
+    
     private val binding by viewBinding(ActivityMainBinding::inflate)
 
     private var launchedDialer = false
@@ -57,13 +60,12 @@ class MainActivity : SimpleActivity() {
     var cachedContacts = ArrayList<Contact>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        isMaterialActivity = true
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         appLaunched(BuildConfig.APPLICATION_ID)
         setupOptionsMenu()
         refreshMenuItems()
-        updateMaterialActivityViews(binding.mainCoordinator, binding.mainHolder, useTransparentNavigation = false, useTopSearchMenu = true)
+        setupEdgeToEdge(padBottomImeAndSystem = listOf(binding.mainTabsHolder))
 
         EventBus.getDefault().register(this)
         launchedDialer = savedInstanceState?.getBoolean(OPEN_DIAL_PAD_AT_LAUNCH) ?: false
@@ -72,7 +74,11 @@ class MainActivity : SimpleActivity() {
             checkContactPermissions()
 
             if (!config.wasOverlaySnackbarConfirmed && !Settings.canDrawOverlays(this)) {
-                val snackbar = Snackbar.make(binding.mainHolder, R.string.allow_displaying_over_other_apps, Snackbar.LENGTH_INDEFINITE).setAction(R.string.ok) {
+                val snackbar = Snackbar.make(
+                    binding.mainHolder,
+                    R.string.allow_displaying_over_other_apps,
+                    Snackbar.LENGTH_INDEFINITE
+                ).setAction(R.string.ok) {
                     config.wasOverlaySnackbarConfirmed = true
                     startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
                 }
@@ -83,9 +89,9 @@ class MainActivity : SimpleActivity() {
                 snackbar.show()
             }
 
-            handleNotificationPermission { granted ->
+            handleFullScreenNotificationsPermission { granted ->
                 if (!granted) {
-                    PermissionRequiredDialog(this, R.string.allow_notifications_incoming_calls, { openNotificationSettings() })
+                    toast(org.fossify.commons.R.string.notifications_disabled)
                 }
             }
         } else {
@@ -173,11 +179,12 @@ class MainActivity : SimpleActivity() {
         refreshItems()
     }
 
-    override fun onBackPressed() {
-        if (binding.mainMenu.isSearchOpen) {
+    override fun onBackPressedCompat(): Boolean {
+        return if (binding.mainMenu.isSearchOpen) {
             binding.mainMenu.closeSearch()
+            true
         } else {
-            super.onBackPressed()
+            false
         }
     }
 
@@ -188,7 +195,7 @@ class MainActivity : SimpleActivity() {
 
     private fun refreshMenuItems() {
         val currentFragment = getCurrentFragment()
-        binding.mainMenu.getToolbar().menu.apply {
+        binding.mainMenu.requireToolbar().menu.apply {
             findItem(R.id.clear_call_history).isVisible = currentFragment == getRecentsFragment()
             findItem(R.id.sort).isVisible = currentFragment != getRecentsFragment()
             findItem(R.id.filter).isVisible = currentFragment != getRecentsFragment()
@@ -201,7 +208,7 @@ class MainActivity : SimpleActivity() {
 
     private fun setupOptionsMenu() {
         binding.mainMenu.apply {
-            getToolbar().inflateMenu(R.menu.menu)
+            requireToolbar().inflateMenu(R.menu.menu)
             toggleHideOnScroll(false)
             setupMenu()
 
@@ -215,7 +222,7 @@ class MainActivity : SimpleActivity() {
                 getCurrentFragment()?.onSearchQueryChanged(text)
             }
 
-            getToolbar().setOnMenuItemClickListener { menuItem ->
+            requireToolbar().setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.clear_call_history -> clearCallHistory()
                     R.id.create_new_contact -> launchCreateNewContactIntent()
@@ -257,7 +264,6 @@ class MainActivity : SimpleActivity() {
     }
 
     private fun updateMenuColors() {
-        updateStatusbarColor(getProperBackgroundColor())
         binding.mainMenu.updateColors()
     }
 
@@ -320,7 +326,6 @@ class MainActivity : SimpleActivity() {
 
         val bottomBarColor = getBottomNavigationBackgroundColor()
         binding.mainTabsHolder.setBackgroundColor(bottomBarColor)
-        updateNavigationBarColor(bottomBarColor)
     }
 
     private fun getInactiveTabIndexes(activeIndex: Int) = (0 until binding.mainTabsHolder.tabCount).filter { it != activeIndex }
